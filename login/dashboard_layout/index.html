@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConectJá - Painel Operacional</title>
+    <!-- Tailwind CSS CDN for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the dark theme and layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: #1a1a2e; /* Dark background */
+            color: #e0e0e0; /* Light text color */
+            display: flex; /* Use flexbox for sidebar and main content */
+            min-height: 100vh; /* Full viewport height */
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            width: 250px;
+            background-color: #16213e; /* Slightly darker than body */
+            padding: 24px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0; /* Prevent sidebar from shrinking */
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.5rem; /* 24px */
+            font-weight: 700; /* bold */
+            color: #e0e0e0;
+            margin-left: 12px;
+        }
+
+        .sidebar-nav {
+            flex-grow: 1; /* Allows navigation to take available space */
+            margin-top: 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #a0a0a0; /* Lighter gray for inactive items */
+            text-decoration: none;
+            transition: background-color 0.2s, color 0.2s;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background-color: #2a3b5c; /* Darker blue on hover */
+            color: #ffffff;
+        }
+
+        .nav-item.active {
+            background-color: #0f3460; /* Active item background */
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+
+        /* Main content styling */
+        .main-content {
+            flex-grow: 1; /* Allows main content to take remaining space */
+            padding: 32px;
+            overflow-y: auto; /* Enable scrolling for content */
+        }
+
+        .main-header {
+            font-size: 2.25rem; /* 36px */
+            font-weight: 700; /* bold */
+            color: #e0e0e0;
+            margin-bottom: 24px;
+        }
+
+        /* Card styling */
+        .card {
+            background-color: #16213e; /* Same as sidebar for consistency */
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            font-size: 1.5rem; /* 24px */
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 16px;
+        }
+
+        /* List styling */
+        .content-list {
+            list-style: none; /* Remove default bullet */
+            padding-left: 0;
+            margin-top: 0;
+        }
+
+        .content-list li {
+            position: relative;
+            padding-left: 28px; /* Space for custom bullet */
+            margin-bottom: 8px;
+            color: #c0c0c0;
+        }
+
+        .content-list li::before {
+            content: '•'; /* Custom bullet point */
+            color: #0f3460; /* Blue bullet */
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+            line-height: 1;
+        }
+
+        /* Table styling */
+        .data-table {
+            width: 100%;
+            border-collapse: separate; /* Use separate for rounded corners */
+            border-spacing: 0;
+            margin-top: 16px;
+            border-radius: 8px;
+            overflow: hidden; /* Ensures rounded corners apply */
+        }
+
+        .data-table th, .data-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #2a3b5c; /* Darker border for rows */
+        }
+
+        .data-table th {
+            background-color: #0f3460; /* Dark blue header */
+            color: #ffffff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem; /* 14px */
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none; /* No border on last row */
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #2a3b5c; /* Hover effect for rows */
+        }
+
+        /* Accordion styling */
+        .accordion-item {
+            border-bottom: 1px solid #2a3b5c;
+        }
+
+        .accordion-trigger {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 12px 16px;
+            background-color: #1a1a2e; /* Darker background for trigger */
+            color: #e0e0e0;
+            font-weight: 600;
+            border: none;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .accordion-trigger:hover {
+            background-color: #2a3b5c;
+        }
+
+        .accordion-trigger.open svg {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            padding: 12px 16px;
+            background-color: #16213e;
+            color: #c0c0c0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+        }
+
+        .accordion-content.open {
+            max-height: 500px; /* Adjust as needed for content height */
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+
+        /* Button styling */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            border: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background-color: #0f3460; /* Primary blue */
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: #1a4d8d; /* Darker blue on hover */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-edit {
+            background-color: #e6b800; /* Yellow for edit */
+            color: #ffffff;
+        }
+
+        .btn-edit:hover {
+            background-color: #ccaa00;
+        }
+
+        .btn-delete {
+            background-color: #cc3300; /* Red for delete */
+            color: #ffffff;
+        }
+
+        .btn-delete:hover {
+            background-color: #b32d00;
+        }
+
+        .btn-copy {
+            background-color: #33aaff; /* Light blue for copy */
+            color: #ffffff;
+        }
+
+        .btn-copy:hover {
+            background-color: #2299ee;
+        }
+
+        /* Form elements for supervisor actions */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #e0e0e0;
+            font-weight: 500;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="url"],
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #2a3b5c;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="url"]:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #0f3460;
+            box-shadow: 0 0 0 2px rgba(15, 52, 96, 0.5);
+        }
+
+        /* Modal styling (reused from login) */
+        .modal {
+            display: none !important; /* Hidden by default, now with !important */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.6); /* Darker overlay */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #16213e; /* Dark theme modal */
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            position: relative;
+            color: #e0e0e0;
+        }
+        .close-button {
+            color: #a0a0a0;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #ffffff;
+        }
+        .modal-message {
+            margin-bottom: 20px;
+            font-size: 1.125rem; /* 18px */
+        }
+        .modal-button {
+            background-color: #0f3460;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .modal-button:hover {
+            background-color: #1a4d8d;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column; /* Stack sidebar and main content on small screens */
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 16px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            }
+            .sidebar-nav {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
+            }
+            .nav-item {
+                flex: 1 1 auto; /* Allow items to grow and shrink */
+                justify-content: center;
+                text-align: center;
+                padding: 8px 12px;
+            }
+            .nav-item svg {
+                margin-right: 8px;
+            }
+            .main-content {
+                padding: 16px;
+            }
+            .main-header {
+                font-size: 1.75rem; /* 28px */
+            }
+            .card {
+                padding: 16px;
+            }
+            .card-header {
+                font-size: 1.25rem; /* 20px */
+            }
+        }
+
+        /* Specific styles for black and yellow theme */
+        .bg-black-custom {
+            background-color: #121212; /* A deeper black */
+        }
+        .text-yellow-custom {
+            color: #FFD700; /* Gold/Yellow */
+        }
+        .border-yellow-custom {
+            border-color: #FFD700;
+        }
+        .btn-yellow {
+            background-color: #FFD700;
+            color: #121212;
+        }
+        .btn-yellow:hover {
+            background-color: #E0B800;
+        }
+        .chart-container {
+            background-color: #1e1e1e; /* Slightly lighter black for chart background */
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #FFD700;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="https://via.placeholder.com/40/FFD700/000000?text=CJ" alt="Logo" class="rounded-full">
+            <h1>ConectJá</h1>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="nav-item active">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="prompts.html" class="nav-item">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd"></path></svg>
+                <span>Prompts</span>
+            </a>
+            <a href="aprendizados.html" class="nav-item">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 003 14v1a1 1 0 001 1h12a1 1 0 001-1v-1a1 1 0 00-.293-.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 110-6 3 3 0 010 6z" clipRule="evenodd"></path></svg>
+                <span>Aprendizados</span>
+            </a>
+            <a href="meu_perfil.html" class="nav-item">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path></svg>
+                <span>Meu Perfil</span>
+            </a>
+            <a href="alinhamentos.html" class="nav-item">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd"></path></svg>
+                <span>Alinhamentos</span>
+            </a>
+            <a href="notes_goals.html" class="nav-item">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm10 2a.75.75 0 00-1.5 0v3.25a.75.75 0 001.5 0V6zM6 6a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V6zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V8.5zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V11zm4-5.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V5.5zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V8.5zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V11zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V13.5z" clipRule="evenodd"></path></svg>
+                <span>Notas / Metas</span>
+            </a>
+            <a href="ramais_groups.html" class="nav-item">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.774a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.06-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
+                <span>Ramais / Grupos</span>
+            </a>
+            <a href="useful_links.html" class="nav-item">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H7a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
+                <span>Links Úteis</span>
+            </a>
+            <!-- Supervisor only sections -->
+            <hr class="border-zinc-700 my-4">
+            <h2 class="text-sm font-semibold text-zinc-500 mb-2 px-4 supervisor-only" data-role="supervisor" style="display: none;">SUPERVISOR</h2>
+            <a href="collaborator_profiles.html" class="nav-item supervisor-only" data-role="supervisor" style="display: none;">
+                <svg fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0113 3.414L16.586 7A2 2 0 0117 8.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm-1 8a1 1 0 100 2h.01a1 1 0 100-2H3zm6.293-4.707a1 1 0 00-1.414-1.414L9 6.586 7.707 5.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 000-1.414z" clipRule="evenodd"></path></svg>
+                <span>Perfis Colaboradores</span>
+            </a>
+        </nav>
+        <!-- User Profile/Logout at the bottom -->
+        <div class="mt-auto pt-4 border-t border-zinc-700">
+            <div class="flex items-center text-zinc-400">
+                <img id="user-avatar" src="https://via.placeholder.com/32/FFD700/000000?text=JD" alt="User Avatar" class="rounded-full mr-3">
+                <div>
+                    <p id="user-name" class="font-semibold text-white">Carregando...</p>
+                    <p id="user-role" class="text-xs">Carregando...</p>
+                </div>
+            </div>
+            <button id="logout-button" class="mt-4 w-full bg-zinc-700 hover:bg-red-600 text-white py-2 rounded-md transition-colors">Sair</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <h2 class="main-header">Painel Operacional</h2>
+
+        <!-- Personal Notes Section -->
+        <div class="card">
+            <h3 class="card-header">Minhas Anotações Pessoais</h3>
+            <div class="form-group">
+                <label for="new-personal-note" class="text-yellow-custom font-semibold mb-2">Nova Anotação:</label>
+                <textarea id="new-personal-note" class="w-full p-3 rounded-lg border border-zinc-700 bg-zinc-800 text-white focus:outline-none focus:ring-2 focus:ring-yellow-custom" rows="4" placeholder="Digite sua anotação pessoal aqui..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-yellow" onclick="handleAddPersonalNote()">Adicionar Anotação</button>
+            <hr class="border-zinc-700 my-6">
+            <h3 class="card-header">Minhas Anotações</h3>
+            <ul id="personal-notes-list" class="content-list">
+                <!-- Personal notes will be loaded here by JavaScript -->
+            </ul>
+        </div>
+    </main>
+
+    <!-- Message Modal (reused from login page for consistency) -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="window.closeModal()">&times;</span>
+            <p id="modalMessage" class="modal-message"></p>
+            <div class="modal-buttons"> <!-- Container for modal buttons -->
+                <button onclick="window.closeModal()" class="modal-button">OK</button>
+                <!-- Cancel button will be added by JS for confirm modal -->
+            </div>
+        </div>
+    </div>
+
+    <!-- D3.js CDN for charts (if you still plan to use it) -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Main JavaScript file with Supabase integration -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
