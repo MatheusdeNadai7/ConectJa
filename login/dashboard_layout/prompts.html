@@ -4,258 +4,288 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ConectJá - Prompts</title>
-    <!-- Tailwind CSS CDN for utility classes -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter para tipografia moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Custom styles for the dark theme and layout */
+        /* Estilos customizados para o tema escuro e layout */
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            background-color: #1a1a2e; /* Dark background */
-            color: #e0e0e0; /* Light text color */
-            display: flex; /* Use flexbox for sidebar and main content */
-            min-height: 100vh; /* Full viewport height */
+            background-color: #0f172a; /* Slate-900 para um fundo escuro profundo */
+            color: #e2e8f0; /* Slate-200 para texto claro */
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden; /* Previne rolagem horizontal */
         }
 
-        /* Sidebar styling */
+        /* Estilo da barra lateral */
         .sidebar {
-            width: 250px;
-            background-color: #16213e; /* Slightly darker than body */
+            width: 280px;
+            background-color: #1e293b; /* Slate-800, ligeiramente mais escuro para contraste */
             padding: 24px;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.4);
             display: flex;
             flex-direction: column;
-            flex-shrink: 0; /* Prevent sidebar from shrinking */
+            flex-shrink: 0;
+            position: fixed;
+            height: 100%;
+            overflow-y: auto; /* Barra lateral rolável se o conteúdo for longo */
+            transition: transform 0.3s ease-in-out;
+            z-index: 1000; /* Garante que a barra lateral esteja acima do conteúdo */
         }
 
-        .sidebar-header {
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        /* Estilo do conteúdo principal */
+        .main-content {
+            flex-grow: 1;
+            padding-left: 280px; /* Deslocamento para barra lateral fixa */
+            transition: padding-left 0.3s ease-in-out;
+        }
+
+        .main-content.expanded {
+            padding-left: 0;
+        }
+
+        /* Estilo do cabeçalho */
+        header {
+            background-color: #1e293b; /* Slate-800 para o cabeçalho */
+            padding: 16px 32px;
+            border-bottom: 1px solid #334155; /* Slate-700 */
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            margin-bottom: 32px;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
-        .sidebar-header h1 {
-            font-size: 1.5rem; /* 24px */
-            font-weight: 700; /* bold */
-            color: #e0e0e0;
-            margin-left: 12px;
-        }
-
-        .sidebar-nav {
-            flex-grow: 1; /* Allows navigation to take available space */
-            margin-top: 16px;
-        }
-
-        .nav-item {
+        /* Estilo dos cartões/cards */
+        .card {
+            background-color: #1e293b; /* Slate-800 */
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s ease-in-out;
+            margin-bottom: 24px; /* Adicionado para espaçamento entre cards */
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Estilo dos valores métricos (se usados para outros propósitos) */
+        .metric-value {
+            font-size: 2.25rem; /* 36px */
+            font-weight: 700;
+            color: #8b5cf6; /* Violet-500, uma cor vibrante de destaque */
+        }
+
+        /* Estilo dos rótulos métricos (se usados para outros propósitos) */
+        .metric-label {
+            font-size: 1rem; /* 16px */
+            color: #94a3b8; /* Slate-400 */
+        }
+
+        /* Estilo dos contêineres de gráfico (se usados para outros propósitos) */
+        .chart-container {
+            position: relative;
+            height: 300px; /* Altura fixa para gráficos */
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Estilo da tabela */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        th, td {
             padding: 12px 16px;
-            border-radius: 8px;
-            color: #a0a0a0; /* Lighter gray for inactive items */
-            text-decoration: none;
-            transition: background-color 0.2s, color 0.2s;
-            margin-bottom: 8px;
+            text-align: left;
+            border-bottom: 1px solid #334155; /* Slate-700 */
+        }
+
+        th {
+            background-color: #334155; /* Slate-700 */
+            color: #e2e8f0;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem; /* 14px */
+        }
+
+        td {
+            background-color: #1e293b; /* Slate-800 */
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Estilo do modal de mensagem */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000; /* Acima de tudo */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #1e293b;
+            margin: auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            position: relative;
+            text-align: center;
+        }
+
+        .close-button {
+            color: #94a3b8;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
             cursor: pointer;
         }
 
-        .nav-item:hover {
-            background-color: #2a3b5c; /* Darker blue on hover */
-            color: #ffffff;
+        .close-button:hover,
+        .close-button:focus {
+            color: #cbd5e1;
+            text-decoration: none;
+            cursor: pointer;
         }
 
-        .nav-item.active {
-            background-color: #0f3460; /* Active item background */
-            color: #ffffff;
+        .modal-message {
+            margin-bottom: 20px;
+            font-size: 1.125rem;
+            color: #e2e8f0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .modal-button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
             font-weight: 600;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.2s ease;
         }
 
-        .nav-item svg {
-            width: 20px;
-            height: 20px;
-            margin-right: 12px;
+        .modal-button.primary {
+            background-color: #8b5cf6; /* Violet-500 */
+            color: white;
         }
 
-        /* Main content styling */
-        .main-content {
-            flex-grow: 1; /* Allows main content to take remaining space */
-            padding: 32px;
-            overflow-y: auto; /* Enable scrolling for content */
+        .modal-button.primary:hover {
+            background-color: #7c3aed; /* Violet-600 */
         }
 
-        .main-header {
-            font-size: 2.25rem; /* 36px */
-            font-weight: 700; /* bold */
-            color: #e0e0e0;
-            margin-bottom: 24px;
+        .modal-button.secondary {
+            background-color: #334155; /* Slate-700 */
+            color: #e2e8f0;
         }
 
-        /* Card styling */
-        .card {
-            background-color: #16213e; /* Same as sidebar for consistency */
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            padding: 24px;
-            margin-bottom: 24px;
+        .modal-button.secondary:hover {
+            background-color: #475569; /* Slate-600 */
         }
 
-        .card-header {
-            font-size: 1.5rem; /* 24px */
-            font-weight: 600;
-            color: #e0e0e0;
-            margin-bottom: 16px;
+        /* Estilos específicos para o tema preto e amarelo do seu código original */
+        .bg-black-custom {
+            background-color: #121212; /* Um preto mais profundo */
+        }
+        .text-yellow-custom {
+            color: #FFD700; /* Ouro/Amarelo */
+        }
+        .border-yellow-custom {
+            border-color: #FFD700;
+        }
+        .btn-yellow {
+            background-color: #FFD700;
+            color: #121212;
+        }
+        .btn-yellow:hover {
+            background-color: #E0B800;
         }
 
-        /* List styling */
+        /* Estilos para lista de conteúdo (anotações, prompts, etc.) */
         .content-list {
-            list-style: none; /* Remove default bullet */
+            list-style: none; /* Remove o marcador padrão */
             padding-left: 0;
             margin-top: 0;
         }
 
         .content-list li {
             position: relative;
-            padding-left: 28px; /* Space for custom bullet */
-            margin-bottom: 8px;
-            color: #c0c0c0;
-        }
-
-        .content-list li::before {
-            content: '•'; /* Custom bullet point */
-            color: #0f3460; /* Blue bullet */
-            position: absolute;
-            left: 0;
-            font-size: 1.2em;
-            line-height: 1;
-        }
-
-        /* Table styling */
-        .data-table {
-            width: 100%;
-            border-collapse: separate; /* Use separate for rounded corners */
-            border-spacing: 0;
-            margin-top: 16px;
-            border-radius: 8px;
-            overflow: hidden; /* Ensures rounded corners apply */
-        }
-
-        .data-table th, .data-table td {
             padding: 12px 16px;
-            text-align: left;
-            border-bottom: 1px solid #2a3b5c; /* Darker border for rows */
+            margin-bottom: 8px;
+            background-color: #1f2937; /* Slate-800 para itens de lista */
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            color: #c0c0c0;
+            display: flex;
+            flex-direction: column; /* Para empilhar título e conteúdo */
+            align-items: flex-start; /* Alinhar texto à esquerda */
         }
 
-        .data-table th {
-            background-color: #0f3460; /* Dark blue header */
-            color: #ffffff;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.875rem; /* 14px */
-        }
-
-        .data-table tr:last-child td {
-            border-bottom: none; /* No border on last row */
-        }
-
-        .data-table tbody tr:hover {
-            background-color: #2a3b5c; /* Hover effect for rows */
-        }
-
-        /* Accordion styling */
-        .accordion-item {
-            border-bottom: 1px solid #2a3b5c;
-        }
-
-        .accordion-trigger {
+        .content-list li .prompt-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            padding: 12px 16px;
-            background-color: #1a1a2e; /* Darker background for trigger */
-            color: #e0e0e0;
-            font-weight: 600;
-            border: none;
-            text-align: left;
-            cursor: pointer;
-            transition: background-color 0.2s;
+            margin-bottom: 8px;
         }
 
-        .accordion-trigger:hover {
-            background-color: #2a3b5c;
+        .content-list li .prompt-content {
+            white-space: pre-wrap; /* Preserva quebras de linha e espaços */
+            word-break: break-word; /* Quebra palavras longas */
+            margin-bottom: 12px;
+            color: #e2e8f0;
+            font-size: 0.95rem;
         }
 
-        .accordion-trigger.open svg {
-            transform: rotate(180deg);
+        .content-list li .prompt-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto; /* Empurra para o final do item */
+            align-self: flex-end; /* Alinha os botões à direita */
         }
 
-        .accordion-content {
-            padding: 12px 16px;
-            background-color: #16213e;
-            color: #c0c0c0;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
-        }
-
-        .accordion-content.open {
-            max-height: 500px; /* Adjust as needed for content height */
-            padding-top: 12px;
-            padding-bottom: 12px;
-        }
-
-        /* Button styling */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 16px;
+        /* Estilos para botões dentro da lista */
+        .content-list .btn {
+            padding: 6px 10px;
+            font-size: 0.875rem; /* 14px */
             border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s, box-shadow 0.2s;
-            border: none;
-            white-space: nowrap;
         }
 
-        .btn-primary {
-            background-color: #0f3460; /* Primary blue */
-            color: #ffffff;
-        }
-
-        .btn-primary:hover {
-            background-color: #1a4d8d; /* Darker blue on hover */
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-        }
-
-        .btn-edit {
-            background-color: #e6b800; /* Yellow for edit */
-            color: #ffffff;
-        }
-
-        .btn-edit:hover {
-            background-color: #ccaa00;
-        }
-
-        .btn-delete {
-            background-color: #cc3300; /* Red for delete */
-            color: #ffffff;
-        }
-
-        .btn-delete:hover {
-            background-color: #b32d00;
-        }
-
-        .btn-copy {
-            background-color: #33aaff; /* Light blue for copy */
-            color: #ffffff;
-        }
-
-        .btn-copy:hover {
-            background-color: #2299ee;
-        }
-
-        /* Form elements for supervisor actions */
+        /* Estilos para formulários */
         .form-group {
             margin-bottom: 16px;
         }
@@ -273,9 +303,9 @@
             width: 100%;
             padding: 10px;
             border-radius: 6px;
-            border: 1px solid #2a3b5c;
-            background-color: #1a1a2e;
-            color: #e0e0e0;
+            border: 1px solid #334155; /* Slate-700 */
+            background-color: #1e293b; /* Slate-800 */
+            color: #e2e8f0;
             font-size: 1rem;
         }
 
@@ -283,229 +313,216 @@
         .form-group input[type="url"]:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #0f3460;
-            box-shadow: 0 0 0 2px rgba(15, 52, 96, 0.5);
+            border-color: #8b5cf6; /* Violet-500 */
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5);
         }
 
-        /* Modal styling (reused from login) */
-        .modal {
-            display: none !important; /* Hidden by default, now with !important */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.6); /* Darker overlay */
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background-color: #16213e; /* Dark theme modal */
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-            width: 90%;
-            max-width: 500px;
-            text-align: center;
-            position: relative;
-            color: #e0e0e0;
-        }
-        .close-button {
-            color: #a0a0a0;
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close-button:hover,
-        .close-button:focus {
-            color: #ffffff;
-        }
-        .modal-message {
-            margin-bottom: 20px;
-            font-size: 1.125rem; /* 18px */
-        }
-        .modal-button {
-            background-color: #0f3460;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: background-color 0.2s;
-            border: none;
-            cursor: pointer;
-        }
-        .modal-button:hover {
-            background-color: #1a4d8d;
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            body {
-                flex-direction: column; /* Stack sidebar and main content on small screens */
-            }
+        /* Ajustes responsivos */
+        @media (max-width: 1024px) {
             .sidebar {
-                width: 100%;
-                height: auto;
-                padding: 16px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-            }
-            .sidebar-nav {
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 8px;
-            }
-            .nav-item {
-                flex: 1 1 auto; /* Allow items to grow and shrink */
-                justify-content: center;
-                text-align: center;
-                padding: 8px 12px;
-            }
-            .nav-item svg {
-                margin-right: 8px;
+                width: 220px;
             }
             .main-content {
-                padding: 16px;
-            }
-            .main-header {
-                font-size: 1.75rem; /* 28px */
-            }
-            .card {
-                padding: 16px;
-            }
-            .card-header {
-                font-size: 1.25rem; /* 20px */
+                padding-left: 220px;
             }
         }
 
-        /* Specific styles for black and yellow theme */
-        .bg-black-custom {
-            background-color: #121212; /* A deeper black */
-        }
-        .text-yellow-custom {
-            color: #FFD700; /* Gold/Yellow */
-        }
-        .border-yellow-custom {
-            border-color: #FFD700;
-        }
-        .btn-yellow {
-            background-color: #FFD700;
-            color: #121212;
-        }
-        .btn-yellow:hover {
-            background-color: #E0B800;
-        }
-        .chart-container {
-            background-color: #1e1e1e; /* Slightly lighter black for chart background */
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        .chart-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #FFD700;
-            margin-bottom: 12px;
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed; /* Fixa a sidebar para que possa deslizar */
+                height: 100%;
+                top: 0;
+                left: 0;
+                width: 70%; /* Ocupa 70% da largura em mobile */
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .main-content {
+                padding-left: 0;
+            }
+            .main-content.expanded {
+                padding-left: 0;
+            }
+            header {
+                padding: 12px 20px;
+            }
+            .header-search, .header-profile {
+                display: none; /* Oculta pesquisa e perfil em telas menores */
+            }
+            .hamburger-menu {
+                display: block !important; /* Mostra o menu hambúrguer */
+            }
+            .grid-cols-1, .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+                grid-template-columns: 1fr; /* Empilha colunas em mobile */
+            }
+            .content-list li {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .content-list li .prompt-actions {
+                align-self: flex-start;
+                margin-top: 12px;
+            }
         }
     </style>
 </head>
 <body>
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <img src="https://via.placeholder.com/40/FFD700/000000?text=CJ" alt="Logo" class="rounded-full">
-            <h1>ConectJá</h1>
+    <!-- Barra Lateral -->
+    <aside class="sidebar" id="sidebar">
+        <div class="flex items-center mb-10">
+            <img src="https://via.placeholder.com/40/8b5cf6/ffffff?text=C" alt="Logotipo ConectJá" class="w-10 h-10 rounded-full mr-3">
+            <h1 class="text-3xl font-bold text-white">ConectJá</h1>
         </div>
-        <nav class="sidebar-nav">
-            <a href="index.html" class="nav-item">
-                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
-                <span>Dashboard</span>
-            </a>
-            <a href="prompts.html" class="nav-item active">
-                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd"></path></svg>
-                <span>Prompts</span>
-            </a>
-            <a href="aprendizados.html" class="nav-item">
-                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 003 14v1a1 1 0 001 1h12a1 1 0 001-1v-1a1 1 0 00-.293-.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 110-6 3 3 0 010 6z" clipRule="evenodd"></path></svg>
-                <span>Aprendizados</span>
-            </a>
-            <a href="meu_perfil.html" class="nav-item">
-                <svg fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path></svg>
-                <span>Meu Perfil</span>
-            </a>
-            <a href="alinhamentos.html" class="nav-item">
-                <svg fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd"></path></svg>
-                <span>Alinhamentos</span>
-            </a>
-            <a href="notes_goals.html" class="nav-item">
-                <svg fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm10 2a.75.75 0 00-1.5 0v3.25a.75.75 0 001.5 0V6zM6 6a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V6zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V8.5zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V11zm4-5.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V5.5zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V8.5zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V11zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V13.5z" clipRule="evenodd"></path></svg>
-                <span>Notas / Metas</span>
-            </a>
-            <a href="ramais_groups.html" class="nav-item">
-                <svg fill="currentColor" viewBox="0 0 20 20"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.774a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.06-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
-                <span>Ramais / Grupos</span>
-            </a>
-            <a href="useful_links.html" class="nav-item">
-                <svg fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H7a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
-                <span>Links Úteis</span>
-            </a>
-            <!-- Supervisor only sections -->
-            <hr class="border-zinc-700 my-4">
-            <h2 class="text-sm font-semibold text-zinc-500 mb-2 px-4 supervisor-only" data-role="supervisor" style="display: none;">SUPERVISOR</h2>
-            <a href="collaborator_profiles.html" class="nav-item supervisor-only" data-role="supervisor" style="display: none;">
-                <svg fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0113 3.414L16.586 7A2 2 0 0117 8.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm-1 8a1 1 0 100 2h.01a1 1 0 100-2H3zm6.293-4.707a1 1 0 00-1.414-1.414L9 6.586 7.707 5.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 000-1.414z" clipRule="evenodd"></path></svg>
-                <span>Perfis Colaboradores</span>
-            </a>
+        <nav class="flex-grow">
+            <ul>
+                <li class="mb-4">
+                    <a href="/dashboard_layout/index.html" class="flex items-center text-lg text-slate-300 hover:text-white hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors duration-200">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="/dashboard_layout/prompts/prompts.html" class="flex items-center text-lg text-slate-300 hover:text-white hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors duration-200 active">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path></svg>
+                        Prompts
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="/dashboard_layout/aprendizados.html" class="flex items-center text-lg text-slate-300 hover:text-white hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors duration-200">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 003 14v1a1 1 0 001 1h12a1 1 0 001-1v-1a1 1 0 00-.293-.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 110-6 3 3 0 010 6z" clip-rule="evenodd"></path></svg>
+                        Aprendizados
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="/dashboard_layout/meu_perfil.html" class="flex items-center text-lg text-slate-300 hover:text-white hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors duration-200">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M10 20v-4a3 3 0 013-3h4a3 3 0 013 3v4M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        Meu Perfil
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="/dashboard_layout/alinhamentos.html" class="flex items-center text-lg text-slate-300 hover:text-white hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors duration-200">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd"></path></svg>
+                        Alinhamentos
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="/dashboard_layout/notes_goals.html" class="flex items-center text-lg text-slate-300 hover:text-white hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors duration-200">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm10 2a.75.75 0 00-1.5 0v3.25a.75.75 0 001.5 0V6zM6 6a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V6zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V8.5zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V11zm4-5.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V5.5zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V8.5zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V11zm0 2.5a.75.75 0 00-1.5 0v.25a.75.75 0 001.5 0V13.5z" clip-rule="evenodd"></path></svg>
+                        Notas / Metas
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="/dashboard_layout/ramais_groups.html" class="flex items-center text-lg text-slate-300 hover:text-white hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors duration-200">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.774a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.06-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
+                        Ramais / Grupos
+                    </a>
+                </li>
+                <li class="mb-4">
+                    <a href="/dashboard_layout/useful_links.html" class="flex items-center text-lg text-slate-300 hover:text-white hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors duration-200">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H7a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                        Links Úteis
+                    </a>
+                </li>
+                <!-- Seções apenas para Supervisor -->
+                <hr class="border-slate-700 my-4">
+                <h2 class="text-sm font-semibold text-slate-500 mb-2 px-4 supervisor-only" data-role="supervisor" style="display: none;">SUPERVISOR</h2>
+                <li class="mb-4 supervisor-only" data-role="supervisor" style="display: none;">
+                    <a href="/dashboard_layout/collaborator_profiles.html" class="flex items-center text-lg text-slate-300 hover:text-white hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors duration-200">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4a2 2 0 012-2h4.586A2 2 0 0113 3.414L16.586 7A2 2 0 0117 8.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm-1 8a1 1 0 100 2h.01a1 1 0 100-2H3zm6.293-4.707a1 1 0 00-1.414-1.414L9 6.586 7.707 5.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4a1 1 0 000-1.414z" clip-rule="evenodd"></path></svg>
+                        Perfis Colaboradores
+                    </a>
+                </li>
+            </ul>
         </nav>
-        <!-- User Profile/Logout at the bottom -->
-        <div class="mt-auto pt-4 border-t border-zinc-700">
-            <div class="flex items-center text-zinc-400">
-                <img id="user-avatar" src="https://via.placeholder.com/32/FFD700/000000?text=JD" alt="User Avatar" class="rounded-full mr-3">
+        <!-- Perfil do Usuário/Sair na parte inferior -->
+        <div class="mt-auto pt-4 border-t border-slate-700">
+            <div class="flex items-center text-slate-400">
+                <img id="user-avatar" src="https://via.placeholder.com/32/FFD700/000000?text=JD" alt="Avatar do Usuário" class="rounded-full w-8 h-8 mr-3">
                 <div>
                     <p id="user-name" class="font-semibold text-white">Carregando...</p>
                     <p id="user-role" class="text-xs">Carregando...</p>
                 </div>
             </div>
-            <button id="logout-button" class="mt-4 w-full bg-zinc-700 hover:bg-red-600 text-white py-2 rounded-md transition-colors">Sair</button>
+            <button id="logout-button" class="mt-4 w-full bg-slate-700 hover:bg-red-600 text-white py-2 rounded-md transition-colors">Sair</button>
         </div>
     </aside>
 
-    <main class="main-content">
-        <h2 class="main-header">Prompts</h2>
-        <div class="card">
-            <ul id="prompts-list" class="content-list">
-                <!-- Prompts will be loaded here by JavaScript -->
-            </ul>
-            <div class="supervisor-controls mt-4" data-role="supervisor">
-                <button class="btn btn-primary btn-yellow" onclick="window.handleAddPrompt()">Adicionar Prompt</button>
+    <!-- Área de Conteúdo Principal -->
+    <div class="main-content" id="main-content">
+        <!-- Cabeçalho/Barra Superior -->
+        <header>
+            <button id="hamburger-button" class="hamburger-menu hidden text-slate-300 hover:text-white focus:outline-none">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <h2 class="text-3xl font-semibold text-white">Prompts</h2>
+            <div class="flex items-center space-x-6">
+                <div class="relative header-search">
+                    <input type="text" placeholder="Pesquisar prompts..." class="bg-slate-700 text-slate-200 rounded-full py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-violet-500 w-64" id="prompt-search-input">
+                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <div class="flex items-center space-x-3 header-profile">
+                    <span class="text-slate-300">Olá, <span id="user-display-name" class="font-medium text-white">Usuário</span>!</span>
+                    <img id="header-user-avatar" src="https://via.placeholder.com/40/6a0dad/ffffff?text=U" alt="Avatar do Usuário" class="w-10 h-10 rounded-full border-2 border-violet-500">
+                    <button class="text-slate-300 hover:text-white focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    </button>
+                </div>
             </div>
-        </div>
-    </main>
+        </header>
 
-    <!-- Message Modal (reused from login page for consistency) -->
+        <!-- Conteúdo da Aba de Prompts -->
+        <main class="p-8">
+            <div class="card">
+                <h3 class="text-xl font-semibold mb-4 text-white">Gerenciar Prompts</h3>
+
+                <!-- Formulário para Adicionar/Editar Prompt -->
+                <div class="form-group mb-4">
+                    <label for="prompt-title-input" class="text-yellow-custom font-semibold mb-2">Título do Prompt:</label>
+                    <input type="text" id="prompt-title-input" class="w-full p-3 rounded-lg border border-slate-700 bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="Ex: Abertura de OS - Internet">
+                </div>
+                <div class="form-group mb-4">
+                    <label for="prompt-category-input" class="text-yellow-custom font-semibold mb-2">Categoria (Opcional):</label>
+                    <input type="text" id="prompt-category-input" class="w-full p-3 rounded-lg border border-slate-700 bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-violet-500" placeholder="Ex: Atendimento, Suporte Técnico">
+                </div>
+                <div class="form-group mb-4">
+                    <label for="prompt-content-textarea" class="text-yellow-custom font-semibold mb-2">Conteúdo do Prompt:</label>
+                    <textarea id="prompt-content-textarea" class="w-full p-3 rounded-lg border border-slate-700 bg-slate-800 text-white focus:outline-none focus:ring-2 focus:ring-violet-500" rows="8" placeholder="Digite o texto completo do prompt aqui..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-4 supervisor-only" data-role="supervisor">
+                    <button id="save-prompt-button" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                        Salvar Prompt
+                    </button>
+                    <button id="cancel-edit-button" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 hidden">
+                        Cancelar Edição
+                    </button>
+                </div>
+
+                <hr class="border-slate-700 my-6">
+
+                <h3 class="text-xl font-semibold mb-4 text-white">Meus Prompts</h3>
+                <ul id="prompts-list" class="content-list">
+                    <!-- Os prompts serão carregados aqui pelo JavaScript -->
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de Mensagem (reutilizado da página de login para consistência) -->
     <div id="messageModal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="window.closeModal()">&times;</span>
             <p id="modalMessage" class="modal-message"></p>
             <div class="modal-buttons">
-                <button onclick="window.closeModal()" class="modal-button">OK</button>
+                <button onclick="window.closeModal()" class="modal-button primary">OK</button>
             </div>
         </div>
     </div>
 
-    <!-- D3.js CDN for charts (if you still plan to use it) -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- Main JavaScript file with Supabase integration -->
-    <script type="module" src="script.js"></script>
-    <script type="module">
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Chama a função de carregamento de prompts quando a página é carregada
-            await loadPrompts();
-        });
-    </script>
+    <!-- Carrega o script.js principal primeiro (caminho absoluto da raiz do servidor) -->
+    <script type="module" src="/dashboard_layout/script.js"></script>
+    <!-- Em seguida, carrega o script específico da aba de prompts (caminho absoluto da raiz do servidor) -->
+    <script type="module" src="/dashboard_layout/prompts/prompts.js"></script>
 </body>
 </html>
