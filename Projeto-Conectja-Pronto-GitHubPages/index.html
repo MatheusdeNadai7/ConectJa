@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ConectJá Web</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the background gradient and font */
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to right, #495049, #495049); /* Warm gradient background */
+        }
+        .login-card {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(9, 25, 248, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden; /* Ensures rounded corners apply to children */
+        }
+        .gradient-bg {
+            background: linear-gradient(to top right, #36f365, #36f365); /* Gradient for the right panel */
+        }
+        .input-field {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            transition: all 0.2s ease-in-out;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #ef4444; /* Red focus border */
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+        }
+        .btn-primary {
+            background-color: #ef4444; /* Red button */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .btn-primary:hover {
+            background-color: #dc2626; /* Darker red on hover */
+        }
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="login-card flex flex-col md:flex-row w-full max-w-4xl">
+        <!-- Left Panel (Login Form) -->
+        <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center items-center text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Bem-vindo</h2>
+            <div class="flex items-center mb-8">
+                <svg class="w-8 h-8 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                <!-- Changed INFINITY to ConectJá -->
+                <span class="text-3xl font-extrabold text-gray-900">ConectJá</span>
+            </div>
+            <p class="text-gray-600 mb-8 text-sm">Seja bem-vindo ao seu ambiente virtual de trabalho</p>
+
+            <form id="login-form" class="w-full max-w-sm">
+                <div class="mb-4 relative">
+                    <label for="email" class="sr-only">Email</label>
+                    <input type="email" id="email" placeholder="Email" required class="input-field pl-10">
+                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                    </svg>
+                </div>
+                <div class="mb-6 relative">
+                    <label for="password" class="sr-only">Password</label>
+                    <input type="password" id="password" placeholder="Password" required class="input-field pl-10">
+                    <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2h2a2 2 0 012 2v5a2 2 0 01-2 2H3a2 2 0 01-2-2v-5a2 2 0 012-2h2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+
+                <div class="mb-6">
+                    <label for="tipo" class="sr-only">Selecione o tipo</label>
+                    <select id="tipo" required class="input-field">
+                        <option value="" disabled selected>Selecione o tipo</option>
+                        <option value="colaborador">Colaborador</option>
+                        <option value="supervisor">Supervisor</option>
+                    </select>
+                </div>
+
+                <!-- Adicionado o botão de Entrar aqui para centralizar com o formulário -->
+                <button type="submit" class="btn-primary w-full mb-4">ENTRAR</button>
+            </form>
+        </div>
+
+        <!-- Right Panel (Image/Marketing) -->
+        <div class="w-full md:w-1/2 gradient-bg p-8 md:p-12 flex flex-col justify-center items-center text-white text-center">
+            <div class="flex items-center mb-4">
+                <svg class="w-10 h-10 text-white mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                <!-- Changed INFINITY to ConectJá -->
+                <span class="text-4xl font-extrabold">ConectJá</span>
+            </div>
+            <p class="text-lg mb-4">Aqui você pode ter acesso a informações, videoaulas e uma base para melhorar seu desempenho.</p>
+            <p class="text-sm opacity-80">"Vamos começar ?"</p>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="document.getElementById('messageModal').style.display='none'">&times;</span>
+            <p id="modalMessage" class="text-gray-800 text-lg"></p>
+            <button onclick="document.getElementById('messageModal').style.display='none'" class="mt-4 px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">OK</button>
+        </div>
+    </div>
+
+    <script type="module" src="./script.js"></script>
+</body>
+</html>
